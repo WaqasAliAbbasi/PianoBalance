@@ -6,7 +6,7 @@ export const Notes: React.FC<{ notes: Array<Note> }> = ({ notes }) => {
     <div className="notes">
       {notes.map((note, key) => (
         <div key={`${note.identifier}${key}`}>
-          {note.identifier} {Math.trunc(note.attack * 100)}
+          {note.identifier} {note.attack.toFixed(2)}
         </div>
       ))}
     </div>

@@ -3,6 +3,7 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  font-size: x-large;
 }
 
 .notes-container {
@@ -13,4 +14,8 @@
 
 .notes {
   margin-right: 2em;
+}
+
+.attack-compare {
+  font-size: 2em;
 }

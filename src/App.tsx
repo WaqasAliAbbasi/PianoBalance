@@ -2,13 +2,37 @@ import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import { WebMidi, Note, NoteMessageEvent } from "webmidi";
 import { Notes } from "./Notes";
+import { AttackCompare } from "./AttackCompare";
 
 export default function App() {
-  const [notes, _setNotes] = useState<Array<Note>>([]);
+  const [leftHandNotes, _setLeftHandNotes] = useState<Array<Note>>([]);
+  const leftHandNotesRef = useRef(leftHandNotes);
+
+  const [rightHandNotes, _setRightHandNotes] = useState<Array<Note>>([]);
+  const rightHandNotesRef = useRef(rightHandNotes);
+
+  const setLeftHandNotes = (notes: Array<Note>) => {
+    leftHandNotesRef.current = notes;
+    _setLeftHandNotes(notes);
+  };
+
+  const setRightHandNotes = (notes: Array<Note>) => {
+    rightHandNotesRef.current = notes;
+    _setRightHandNotes(notes);
+  };
+
   const split = new Note("C4");
 
   const onListen = ({ note }: NoteMessageEvent) => {
-    setNotes([note, ...(notesRef.current || [])].slice(0, 500));
+    if (note.number < split.number) {
+      setLeftHandNotes(
+        [note, ...(leftHandNotesRef.current || [])].slice(0, 20)
+      );
+    } else {
+      setRightHandNotes(
+        [note, ...(rightHandNotesRef.current || [])].slice(0, 20)
+      );
+    }
   };
 
   useEffect(() => {
@@ -25,33 +49,34 @@ export default function App() {
     };
   }, []);
 
-  const notesRef = useRef(notes);
+  useEffect(() => {
+    if (
+      rightHandNotes.length >= 3 &&
+      rightHandNotes.slice(0, 3).every((note) => note.identifier === "C8")
+    ) {
+      reset();
+    }
+  }, [rightHandNotes]);
 
-  const setNotes = (payload: Array<Note>) => {
-    notesRef.current = payload;
-    _setNotes(payload);
+  const reset = () => {
+    setLeftHandNotes([]);
+    setRightHandNotes([]);
   };
-
-  const lessThanSplit = notes
-    .filter((note) => {
-      return note.number < split.number;
-    })
-    .slice(0, 10);
-
-  const moreThanSplit = notes
-    .filter((note) => {
-      return note.number >= split.number;
-    })
-    .slice(0, 10);
 
   return (
     <>
       <h1>Piano Balance</h1>
+      <AttackCompare
+        leftHandNotes={leftHandNotes}
+        rightHandNotes={rightHandNotes}
+      />
       <br />
       <div className="notes-container">
-        <Notes notes={lessThanSplit} />
-        <Notes notes={moreThanSplit} />
+        <Notes notes={leftHandNotes} />
+        <Notes notes={rightHandNotes} />
       </div>
+      <br />
+      <button onClick={() => reset()}>Reset</button>
     </>
   );
 }

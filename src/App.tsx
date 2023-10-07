@@ -13,11 +13,15 @@ export default function App() {
 
   useEffect(() => {
     WebMidi.enable({ sysex: false }).then(() => {
-      WebMidi.inputs[0]?.addListener("noteon", onListen);
+      WebMidi.inputs.forEach((device) =>
+        device.addListener("noteon", onListen)
+      );
     });
 
     return () => {
-      WebMidi.inputs[0]?.removeListener("noteon", onListen);
+      WebMidi.inputs.forEach((device) =>
+        device.removeListener("noteon", onListen)
+      );
     };
   }, []);
 

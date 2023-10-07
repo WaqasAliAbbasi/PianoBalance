@@ -1,28 +1,14 @@
-import { useState, useEffect } from "react";
-import "./app.css";
-import { WebMidi, Note } from "webmidi";
+import React from "react";
+import { Note } from "webmidi";
 
-export default function Notes() {
-  const [notes, setNotes] = useState<Record<string, Array<Note>>>({});
- 
-  console.log(notes)
-
-  const onListen = (deviceName: string, note: Note) => {
-    console.log(notes[deviceName])
-    setNotes({ ...notes, [deviceName]: [note, ...(notes[deviceName] || [])] });
-  }
-
-  useEffect(() => {
-    WebMidi.inputs.forEach((device) =>
-      device.addListener("noteon", (e) => {
-        onListen(device.name, e.note)
-      })
-    );
-  }, []);
-
+export const Notes: React.FC<{ notes: Array<Note> }> = ({ notes }) => {
   return (
-    <>
-      {JSON.stringify(notes)}
-    </>
+    <div className="notes">
+      {notes.map((note, key) => (
+        <div key={`${note.identifier}${key}`}>
+          {note.identifier} {Math.trunc(note.attack * 100)}
+        </div>
+      ))}
+    </div>
   );
-}
+};

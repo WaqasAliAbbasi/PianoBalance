@@ -1,29 +1,53 @@
-import { useState, useEffect } from "react";
-import "./app.css";
-import { WebMidi } from "webmidi";
-import Notes from "./Notes";
+import { useState, useEffect, useRef } from "react";
+import "./App.css";
+import { WebMidi, Note, NoteMessageEvent } from "webmidi";
+import { Notes } from "./Notes";
 
 export default function App() {
-  const [error, setError] = useState("");
-  const [devices, setDevices] = useState<Array<string>>([]);
+  const [notes, _setNotes] = useState<Array<Note>>([]);
+  const split = new Note("C4");
 
-  function onEnabled() {
-    setDevices(WebMidi.inputs.map((device) => device.name));
-  }
+  const onListen = ({ note }: NoteMessageEvent) => {
+    setNotes([note, ...(notesRef.current || [])].slice(0, 500));
+  };
 
   useEffect(() => {
-    WebMidi.enable({sysex:false})
-      .then(onEnabled)
-      .catch((err) => setError(err));
+    WebMidi.enable({ sysex: false }).then(() => {
+      WebMidi.inputs[0]?.addListener("noteon", onListen);
+    });
+
+    return () => {
+      WebMidi.inputs[0]?.removeListener("noteon", onListen);
+    };
   }, []);
+
+  const notesRef = useRef(notes);
+
+  const setNotes = (payload: Array<Note>) => {
+    notesRef.current = payload;
+    _setNotes(payload);
+  };
+
+  const lessThanSplit = notes
+    .filter((note) => {
+      return note.number < split.number;
+    })
+    .slice(0, 10);
+
+  const moreThanSplit = notes
+    .filter((note) => {
+      return note.number >= split.number;
+    })
+    .slice(0, 10);
 
   return (
     <>
       <h1>Piano Balance</h1>
-      <div>Error: {error}</div>
-      {JSON.stringify(devices)}
       <br />
-      {devices.length > 0 && <Notes />}
+      <div className="notes-container">
+        <Notes notes={lessThanSplit} />
+        <Notes notes={moreThanSplit} />
+      </div>
     </>
   );
 }
